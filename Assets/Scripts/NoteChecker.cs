@@ -6,37 +6,48 @@ public class NoteChecker : MonoBehaviour {
 
 	public KeyCode keycode;
 	public bool isActive;
+	public ScoreManager scoreManager;
 	private GameObject note;
-	private SpriteRenderer renderer;
+	private Material material;
+	private Color activeColor;
+	private Color inactiveColor;
 
 	void Start () {
-		this.renderer = GetComponent<SpriteRenderer>();
-		this.renderer.color = Color.yellow;
+		this.material = GetComponent<SpriteRenderer>().material;
+		this.activeColor = this.material.color;
+		this.inactiveColor = this.material.GetColor("_EmissionColor");
 	}
 
 	void Update () {
 		if(Input.GetKeyDown(this.keycode)) {
-			this.renderer.color = Color.green;
-
+			this.material.SetColor("_EmissionColor", this.activeColor);
+			
 			if(this.isActive) {
+				Debug.Log("OK " + this.note.transform.position.z * 6 / 170 + " " + + this.note.transform.position.z);
+				this.isActive = false;
 				Destroy(this.note);
+				this.scoreManager.UpdateScore();
+			} else {
+				this.scoreManager.ResetScore();
+				Debug.Log("MISS " + this.note.transform.position.z * 6 / 170 + " " + + this.note.transform.position.z);
 			}
 		}
 
 		if(Input.GetKeyUp(this.keycode)) {
-			this.renderer.color = Color.yellow;
+			this.material.SetColor("_EmissionColor", this.inactiveColor);
 		}
 	}
 
 	private void OnTriggerEnter(Collider other) {
-		this.isActive = true;
-
 		if(other.gameObject.tag == "Note") {
+			this.isActive = true;
 			this.note = other.gameObject;
 		}
 	}
 
 	private void OnTriggerExit(Collider other) {
 		this.isActive = false;
+		Destroy(this.note);
+		this.scoreManager.ResetScore();
 	}
 }

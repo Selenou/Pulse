@@ -9,6 +9,7 @@ public class TrackInfo {
 	public string artist;
 	public string path;
 	public int bpm;
+	public int duration;
     public Note[] notes;
 }
 

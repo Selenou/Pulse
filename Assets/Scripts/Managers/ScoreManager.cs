@@ -10,6 +10,8 @@ public class ScoreManager : MonoBehaviour {
 	public Text multiplierTxt;
 	public Text accuracyTxt;
 	public int noteValue;
+	public int longNoteScoringPeriod; // ms
+	private Dictionary<string, IEnumerator> scoringLongNoteCoroutines; // we need to keep references for all checkers
 	private int currentStreak;
 	private int scoreMultiplier;
 	private int score;
@@ -20,6 +22,7 @@ public class ScoreManager : MonoBehaviour {
 	private int failedNoteNb;
 
 	void Start () {
+		this.scoringLongNoteCoroutines = new Dictionary<string, IEnumerator>();
 		this.currentStreak = 0;
 		this.scoreMultiplier = 1;
 		this.score = 0;
@@ -42,6 +45,18 @@ public class ScoreManager : MonoBehaviour {
 		this.UpdateHUD();
 	}
 
+	public void StartLongNoteScoring(string tag) {
+		this.scoringLongNoteCoroutines.Add(tag, this.LongNoteScoring());
+        StartCoroutine(this.scoringLongNoteCoroutines[tag]);
+	}
+
+	public void StopLongNoteScoring(string tag) {
+		if(this.scoringLongNoteCoroutines.ContainsKey(tag)) {
+			StopCoroutine(this.scoringLongNoteCoroutines[tag]);
+			this.scoringLongNoteCoroutines.Remove(tag);
+		}
+	}
+
 	private void IncrementStreak() {
 		this.currentStreak++;
 	}
@@ -49,6 +64,14 @@ public class ScoreManager : MonoBehaviour {
 	private void IncrementScore() {
 		this.score += this.noteValue * this.scoreMultiplier;
 	}
+
+    private IEnumerator LongNoteScoring(){
+        while (true){
+			yield return new WaitForSeconds(this.longNoteScoringPeriod / 1000.0f);
+			this.score += (int)((this.longNoteScoringPeriod / 1000.0f) * this.noteValue * this.scoreMultiplier);
+			this.UpdateScoreHUD();
+        }
+    }
 
 	private void CheckForScoreMultiplierUpdate() {
 		if(this.scoreMultiplier == 4) {
@@ -82,9 +105,13 @@ public class ScoreManager : MonoBehaviour {
 	}
 
 	private void UpdateHUD() {
-		this.scoreTxt.text = "Score : " + this.score;
+		this.UpdateScoreHUD();
 		this.streakTxt.text = "Streak : " + this.currentStreak;
 		this.multiplierTxt.text = "Multiplier : " + this.scoreMultiplier;
 		this.accuracyTxt.text = "Accuracy : " + this.accuracy.ToString("F2") + "%";
+	}
+
+	private void UpdateScoreHUD() {
+		this.scoreTxt.text = "Score : " + this.score;
 	}
 }

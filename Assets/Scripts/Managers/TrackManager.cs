@@ -56,7 +56,6 @@ public class TrackManager : MonoBehaviour {
 	}
 
 	private void GenerateTrack() {
-		this.ResizeNeck();
 		this.SpawnNotes();
 		this.SpawnBpmBeats();
 		this.MoveTrackComponents();
@@ -153,12 +152,8 @@ public class TrackManager : MonoBehaviour {
 		}
 	}
 
-	private void ResizeNeck() {
-		//TODO
-	}
-
 	private void MoveTrackComponents() {
-		GameObject noteContainer = GameObject.Find("AnimatedObject");
+		GameObject noteContainer = GameObject.Find("EntitiesContainer");
 		float offset= (calibrationOffset + this.trackDelay - this.startingTime) * this.trackSpeed /1000.0f;
 		noteContainer.transform.position = new Vector3(0.0f, 0.0f, offset);
 		noteContainer.GetComponent<Rigidbody>().velocity = new Vector3(0, 0, -this.trackSpeed);

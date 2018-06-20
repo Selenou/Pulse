@@ -1,20 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class ScoreManager : MonoBehaviour {
 
-	public Text scoreTxt;
-	public Text streakTxt;
-	public Text multiplierTxt;
-	public Text accuracyTxt;
+	public TextMeshProUGUI scoreTxt;
+	public TextMeshProUGUI streakTxt;
+	public Image accuracyArrow;
+	public Image accuracyBg;
+	public Image multiplierValueImg;
 	public int noteValue;
 	public int longNoteScoringPeriod; // ms
 	private Dictionary<string, IEnumerator> scoringLongNoteCoroutines; // we need to keep references for all checkers
 	private int currentStreak;
 	private int scoreMultiplier;
 	private int score;
+	private Sprite[] multiplierSprites;
+	public Sprite accuracyBgHigh;
+	public Sprite accuracyBgMedium;
+	public Sprite accuracyBgLow;
 
 	// Accuracy stuff
 	private float accuracy;
@@ -23,6 +30,10 @@ public class ScoreManager : MonoBehaviour {
 
 	void Start () {
 		this.scoringLongNoteCoroutines = new Dictionary<string, IEnumerator>();
+		this.multiplierSprites = Resources.LoadAll<Sprite>("Textures/ui/mult");
+		this.accuracyBgHigh = Resources.Load<Sprite>("Textures/ui/rock_hi");
+		this.accuracyBgMedium = Resources.Load<Sprite>("Textures/ui/rock_med");
+		this.accuracyBgLow = Resources.Load<Sprite>("Textures/ui/rock_low");
 		this.currentStreak = 0;
 		this.scoreMultiplier = 1;
 		this.score = 0;
@@ -78,13 +89,15 @@ public class ScoreManager : MonoBehaviour {
 			return; // We dont need to go further if the multiplier is already set to 4
 		} 
 
-		if(this.currentStreak == 10) {
-			this.scoreMultiplier = 2;
-		} else if(this.currentStreak == 20){
-			this.scoreMultiplier = 3;
-		} else if(this.currentStreak == 30){
+		if(this.currentStreak >= 30) {
 			this.scoreMultiplier = 4;
+		} else if(this.currentStreak >= 20){
+			this.scoreMultiplier = 3;
+		} else if(this.currentStreak >= 10){
+			this.scoreMultiplier = 2;
 		}
+
+		this.multiplierValueImg.sprite = this.multiplierSprites[this.scoreMultiplier - 1];
 	}
 
 	private void UpdateAccuracy() {
@@ -94,10 +107,22 @@ public class ScoreManager : MonoBehaviour {
 			this.failedNoteNb++; 
 
 		this.accuracy = ((this.totalNoteNb - this.failedNoteNb) * 100.0f) / this.totalNoteNb;
+		float rotation = this.accuracy * (-0.8f) + 40;
+
+		if(rotation > 13.3f) {
+			this.accuracyBg.sprite = this.accuracyBgLow;
+		} else if(rotation > -13.3f) {
+			this.accuracyBg.sprite = this.accuracyBgMedium;
+		} else {
+			this.accuracyBg.sprite = this.accuracyBgHigh;
+		}
+
+		this.accuracyArrow.rectTransform.rotation = Quaternion.Euler(0, 0, rotation);
 	}
 
 	private void ResetScoreMultiplier() {
 		this.scoreMultiplier = 1;
+		this.multiplierValueImg.sprite = this.multiplierSprites[0];
 	}
 
 	private void ResetStreak() {
@@ -106,12 +131,13 @@ public class ScoreManager : MonoBehaviour {
 
 	private void UpdateHUD() {
 		this.UpdateScoreHUD();
-		this.streakTxt.text = "Streak : " + this.currentStreak;
-		this.multiplierTxt.text = "Multiplier : " + this.scoreMultiplier;
-		this.accuracyTxt.text = "Accuracy : " + this.accuracy.ToString("F2") + "%";
+		string test = this.currentStreak.ToString();
+		string test2 = test.Substring(0,test.Length - 1);
+		string test3 = test.Substring(test.Length - 1);
+		this.streakTxt.SetText(test2 + "<#000000>" + test3 + "</color>");
 	}
 
 	private void UpdateScoreHUD() {
-		this.scoreTxt.text = "Score : " + this.score;
+		this.scoreTxt.SetText(this.score.ToString());
 	}
 }
